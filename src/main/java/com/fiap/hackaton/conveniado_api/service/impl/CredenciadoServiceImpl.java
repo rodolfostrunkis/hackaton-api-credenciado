@@ -1,11 +1,15 @@
 package com.fiap.hackaton.conveniado_api.service.impl;
 
+import com.fiap.hackaton.conveniado_api.exception.InvalidCNPJException;
 import com.fiap.hackaton.conveniado_api.model.dto.request.CredenciadoRequestDTO;
 import com.fiap.hackaton.conveniado_api.model.dto.response.CredenciadoResponseDTO;
 import com.fiap.hackaton.conveniado_api.model.entity.CredenciadoEntity;
 import com.fiap.hackaton.conveniado_api.repository.CredenciadoRepository;
 import com.fiap.hackaton.conveniado_api.service.ICredenciadoService;
+import com.fiap.hackaton.conveniado_api.utils.ValidarCNPJ;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +19,8 @@ import java.util.Optional;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class CredenciadoServiceImpl implements ICredenciadoService {
 
+    private static final Logger logger = LogManager.getLogger(CredenciadoServiceImpl.class);
+
     @Autowired
     private final CredenciadoRepository credenciadoRepository;
 
@@ -22,6 +28,10 @@ public class CredenciadoServiceImpl implements ICredenciadoService {
     public CredenciadoResponseDTO cadastraCredenciado(CredenciadoRequestDTO credenciadoRequestDTO) {
         Optional<CredenciadoEntity> credenciadoEncontrado = credenciadoRepository.findByCnpj(credenciadoRequestDTO.getCnpj());
         if (credenciadoEncontrado.isEmpty()) {
+            if (!ValidarCNPJ.isCNPJ(credenciadoRequestDTO.getCnpj())) {
+                logger.error("CNPJ inválido: " + credenciadoRequestDTO.getCnpj());
+                throw new InvalidCNPJException("CNPJ inválido: " + credenciadoRequestDTO.getCnpj());
+            }
             CredenciadoEntity credenciado = new CredenciadoEntity();
             credenciado.setNome(credenciadoRequestDTO.getNome());
             credenciado.setCnpj(credenciadoRequestDTO.getCnpj());
